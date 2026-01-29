@@ -24,3 +24,187 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* React Calendar - Complete Custom Styles (No Library CSS) */
+.react-calendar {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  background: white !important;
+  font-family: Arial, Helvetica, sans-serif !important;
+  line-height: 1.125em !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border: none !important;
+  padding: 5px !important;
+}
+
+.react-calendar__navigation {
+  display: flex !important;
+  height: 44px !important;
+  margin-bottom: 1em !important;
+  flex-shrink: 0 !important;
+}
+
+.react-calendar__navigation button {
+  min-width: 44px !important;
+  background: none !important;
+  font-size: 16px !important;
+  margin-top: 8px !important;
+  font-weight: 600 !important;
+  color: #333 !important;
+  border: none !important;
+  cursor: pointer !important;
+}
+
+.react-calendar__navigation button:enabled:hover,
+.react-calendar__navigation button:enabled:focus {
+  background-color: #e6e6e6 !important;
+  border-radius: 4px !important;
+}
+
+.react-calendar__navigation button[disabled] {
+  background-color: #f0f0f0 !important;
+}
+
+.react-calendar__month-view__weekdays {
+  text-align: center !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  font-size: 0.75em !important;
+  margin-bottom: 0.5em !important;
+  flex-shrink: 0 !important;
+}
+
+.react-calendar__month-view__weekdays__weekday {
+  padding: 0.75em 0 !important;
+  color: #333 !important;
+}
+
+/* Make Saturday and Sunday red in weekday headers */
+.react-calendar__month-view__weekdays__weekday:nth-child(6),
+.react-calendar__month-view__weekdays__weekday:nth-child(7) {
+  color: #dc2626 !important;
+}
+
+.react-calendar__month-view__days {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  gap: 4px !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+}
+
+.react-calendar__tile {
+  max-width: 100% !important;
+  padding: 12px 8px !important;
+  background: #3d3d3d !important;
+  text-align: center !important;
+  line-height: 1.2 !important;
+  font-size: 0.9em !important;
+  height: 120px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  border-radius: 4px !important;
+  position: relative !important;
+  color: #333 !important;
+  border: 1px solid #e6e6e6 !important;
+  cursor: pointer !important;
+}
+
+/* Weekend days - ONLY Saturday and Sunday should be red */
+.react-calendar__tile.weekend-day abbr {
+  color: #dc2626 !important;
+}
+
+/* Ensure all other days are black, not red */
+.react-calendar__tile:not(.weekend-day) abbr {
+  color: #333 !important;
+}
+
+/* Ensure selected/active states override weekend color */
+.react-calendar__tile--active abbr,
+.react-calendar__tile--active.weekend-day abbr {
+  color: white !important;
+}
+
+.react-calendar__tile:enabled:hover,
+.react-calendar__tile:enabled:focus {
+  background: #3d3d3d !important;
+}
+
+.react-calendar__tile--now {
+  background: #ffff76 !important;
+}
+
+.react-calendar__tile--now:enabled:hover,
+.react-calendar__tile--now:enabled:focus {
+  background: #ffffa9 !important;
+}
+
+.react-calendar__tile--active {
+  background: #4d38e8 !important;
+  color: white !important;
+}
+
+.react-calendar__tile--active:enabled:hover,
+.react-calendar__tile--active:enabled:focus {
+  background: #1087ff !important;
+}
+
+.react-calendar__tile abbr {
+  font-size: 1em !important;
+  font-weight: 500 !important;
+  display: block !important;
+  margin-bottom: 4px !important;
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+/* Neighboring month days */
+.react-calendar__tile--neighboringMonth {
+  color: #757575 !important;
+}
+
+.react-calendar__tile--neighboringMonth.weekend-day abbr {
+  color: #dc2626 !important;
+}
+
+.react-calendar__tile--neighboringMonth:not(.weekend-day) abbr {
+  color: #757575 !important;
+}
+
+/* Remove any default red colors - ensure only weekend days are red */
+.react-calendar__tile--neighboringMonth:not(.weekend-day) {
+  color: #757575 !important;
+}
+
+/* Disabled dates */
+.react-calendar__tile:disabled {
+  background: #f0f0f0 !important;
+  color: #ababab !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+/* Remove hover on disabled */
+.react-calendar__tile:disabled:hover {
+  background: #f1f5f9 !important;
+}
