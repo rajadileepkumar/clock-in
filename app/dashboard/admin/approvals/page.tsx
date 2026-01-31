@@ -3,7 +3,11 @@
 import { useState, useEffect } from "react";
 import { useAppSelector, useAppDispatch } from "../../../store/selectors/userSelector";
 import { TimeSession } from "../../../store/slices/timeTrackingSlice";
-import { fetchUserSessions, updateSessionStatus } from "../../../store/slices/timeTrackingSlice";
+import { fetchUserSessions, 
+ 
+  // updateSessionStatus 
+
+} from "../../../store/slices/timeTrackingSlice";
 import { CheckIcon, XMarkIcon, ClockIcon } from "@heroicons/react/24/outline";
 
 export default function ApprovalsPage() {
@@ -36,11 +40,11 @@ export default function ApprovalsPage() {
   const handleApprove = async (sessionId: string) => {
     try {
       setActionInProgress(sessionId);
-      await dispatch(updateSessionStatus({
-        sessionId,
-        status: "APPROVED",
-        notes
-      })).unwrap();
+      // await dispatch(updateSessionStatus({
+      //   sessionId,
+      //   status: "APPROVED",
+      //   notes
+      // })).unwrap();
       
       setSelectedSession(null);
       setNotes("");
@@ -61,11 +65,11 @@ export default function ApprovalsPage() {
 
     try {
       setActionInProgress(sessionId);
-      await dispatch(updateSessionStatus({
-        sessionId,
-        status: "REJECTED",
-        notes
-      })).unwrap();
+      // await dispatch(updateSessionStatus({
+      //   sessionId,
+      //   status: "REJECTED",
+      //   notes
+      // })).unwrap();
       
       setSelectedSession(null);
       setNotes("");
