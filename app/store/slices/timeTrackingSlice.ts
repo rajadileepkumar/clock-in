@@ -114,29 +114,29 @@ export const fetchUserSessions = createAsyncThunk(
 );
 
 // Add these thunks
-export const fetchPendingSessions = createAsyncThunk(
-  'timeTracking/fetchPendingSessions',
-  async () => {
-    const response = await fetch('/api/sessions/pending');
-    return await response.json();
-  }
-);
+// export const fetchPendingSessions = createAsyncThunk(
+//   'timeTracking/fetchPendingSessions',
+//   async () => {
+//     const response = await fetch('/api/sessions/pending');
+//     return await response.json();
+//   }
+// );
 
-export const updateSessionStatus = createAsyncThunk(
-  'timeTracking/updateSessionStatus',
-  async ({ sessionId, status, notes }: { 
-    sessionId: string, 
-    status: 'APPROVED' | 'REJECTED', 
-    notes: string 
-  }) => {
-    const response = await fetch(`/api/sessions/${sessionId}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status, notes })
-    });
-    return await response.json();
-  }
-);
+// export const updateSessionStatus = createAsyncThunk(
+//   'timeTracking/updateSessionStatus',
+//   async ({ sessionId, status, notes }: { 
+//     sessionId: string, 
+//     status: 'APPROVED' | 'REJECTED', 
+//     notes: string 
+//   }) => {
+//     const response = await fetch(`/api/sessions/${sessionId}/status`, {
+//       method: 'PATCH',
+//       headers: { 'Content-Type': 'application/json' },
+//       body: JSON.stringify({ status, notes })
+//     });
+//     return await response.json();
+//   }
+// );
 
 // ============ SLICE ============
 
