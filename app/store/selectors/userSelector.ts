@@ -1,6 +1,9 @@
 // store/selectors/userSelector.ts
+import { createSelector } from "@reduxjs/toolkit";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "../index";
+import { TimeSession } from "../slices/timeTrackingSlice";
+
 
 /* =======================
    Selectors with safe defaults
@@ -99,3 +102,47 @@ export const selectFilteredUsers = (
 
   return users;
 };
+
+// New selectors for history
+export const selectHistorySessions = (state: RootState) => 
+  state.timeTracking.historySessions || [];
+
+export const selectHistoryPagination = (state: RootState) => 
+  state.timeTracking.historyPagination || { page: 1, limit: 10, total: 0 };
+
+export const selectHistoryLoading = (state: RootState) => 
+  state.timeTracking.historyLoading || false;
+
+export const selectHistoryFilters = (state: RootState) => 
+  state.timeTracking.historyFilters || {};
+
+// Memoized selector for filtered history
+export const selectFilteredHistory = createSelector(
+  [selectHistorySessions, selectHistoryFilters],
+  (sessions, filters) => {
+    let filtered = [...sessions];
+    
+    if (filters.status) {
+      filtered = filtered.filter(session => session.status === filters.status);
+    }
+    
+    if (filters.dateFrom) {
+      const fromDate = new Date(filters.dateFrom);
+      filtered = filtered.filter(session => new Date(session.date) >= fromDate);
+    }
+    
+    if (filters.dateTo) {
+      const toDate = new Date(filters.dateTo);
+      filtered = filtered.filter(session => new Date(session.date) <= toDate);
+    }
+    
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(session => 
+        session.status.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    return filtered;
+  }
+);

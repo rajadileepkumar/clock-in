@@ -14,3 +14,20 @@ export const buildISODateTime = (dateStr: string, hour: number) => {
   date.setHours(hours, minutes, 0, 0); // local time
   return date.toISOString(); // UTC ISO
 };
+
+export const formatTime = (timestamp: string) => {
+  return new Date(timestamp).toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+export const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString("en-US", {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
