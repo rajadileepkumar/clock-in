@@ -1,17 +1,17 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAppSelector, useAppDispatch } from "../../../store/selectors/userSelector";
+import { useAppSelector, useAppDispatch, selectUser } from "../../../store/selectors/userSelector";
 import { TimeSession } from "../../../store/slices/timeTrackingSlice";
 import { fetchUserSessions, 
- 
-  // updateSessionStatus 
-
+ updateSessionStatus
 } from "../../../store/slices/timeTrackingSlice";
 import { CheckIcon, XMarkIcon, ClockIcon } from "@heroicons/react/24/outline";
 
 export default function ApprovalsPage() {
   const dispatch = useAppDispatch();
+  const user = useAppSelector(selectUser);
   const sessions = useAppSelector((state) => state.timeTracking.sessions);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSession, setSelectedSession] = useState<TimeSession | null>(null);
@@ -20,6 +20,8 @@ export default function ApprovalsPage() {
 
   // Filter pending sessions
   const pendingSessions = sessions.filter(session => session.status === "PENDING");
+  // const approvedSessions = sessions.filter(session => session.status === "APPROVED");
+  // const rejectedSessions = sessions.filter(session => session.status === "REJECTED");
 
   useEffect(() => {
     loadSessions();
@@ -39,16 +41,18 @@ export default function ApprovalsPage() {
 
   const handleApprove = async (sessionId: string) => {
     try {
+      console.log("Approving session:", sessionId);
       setActionInProgress(sessionId);
-      // await dispatch(updateSessionStatus({
-      //   sessionId,
-      //   status: "APPROVED",
-      //   notes
-      // })).unwrap();
+
+      await dispatch(updateSessionStatus({
+        sessionId,
+        status: "COMPLETED",
+        userId: user?.id || "",
+      })).unwrap();
       
       setSelectedSession(null);
       setNotes("");
-      alert("Session approved successfully!");
+      // alert("Session approved successfully!");
     } catch (error) {
       console.error("Failed to approve session:", error);
       alert("Failed to approve session");
@@ -58,22 +62,22 @@ export default function ApprovalsPage() {
   };
 
   const handleReject = async (sessionId: string) => {
-    if (!notes.trim()) {
-      alert("Please provide a reason for rejection");
-      return;
-    }
+    // if (!notes.trim()) {
+    //   alert("Please provide a reason for rejection");
+    //   return;
+    // }
 
     try {
       setActionInProgress(sessionId);
-      // await dispatch(updateSessionStatus({
-      //   sessionId,
-      //   status: "REJECTED",
-      //   notes
-      // })).unwrap();
+      await dispatch(updateSessionStatus({
+        sessionId,
+        status: "REJECTED",
+        userId: user?.id || "",
+      })).unwrap();
       
       setSelectedSession(null);
       setNotes("");
-      alert("Session rejected successfully!");
+      // alert("Session rejected successfully!");
     } catch (error) {
       console.error("Failed to reject session:", error);
       alert("Failed to reject session");
@@ -118,36 +122,34 @@ export default function ApprovalsPage() {
             </div>
           </div>
         </div>
-
+{/* 
         <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
           <div className="flex items-center">
             <div className="p-3 bg-green-100 rounded-lg mr-4">
               <CheckIcon className="w-6 h-6 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Approved Today</p>
+              <p className="text-sm text-gray-600">Approved</p>
               <p className="text-2xl font-bold text-gray-800">
-                {sessions.filter(s => s.status === 'APPROVED' && 
-                  new Date(s.clockIn).toDateString() === new Date().toDateString()).length}
+                {approvedSessions.length}
               </p>
             </div>
           </div>
-        </div>
+        </div> */}
 
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+        {/* <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
           <div className="flex items-center">
             <div className="p-3 bg-red-100 rounded-lg mr-4">
               <XMarkIcon className="w-6 h-6 text-red-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Rejected Today</p>
+              <p className="text-sm text-gray-600">Rejected</p>
               <p className="text-2xl font-bold text-gray-800">
-                {sessions.filter(s => s.status === 'REJECTED' && 
-                  new Date(s.clockIn).toDateString() === new Date().toDateString()).length}
+                {rejectedSessions.length}
               </p>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Pending Sessions Table */}

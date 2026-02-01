@@ -175,21 +175,26 @@ export const fetchUserHistoryRequests = createAsyncThunk(
 //   }
 // );
 
-// export const updateSessionStatus = createAsyncThunk(
-//   'timeTracking/updateSessionStatus',
-//   async ({ sessionId, status, notes }: {
-//     sessionId: string,
-//     status: 'APPROVED' | 'REJECTED',
-//     notes: string
-//   }) => {
-//     const response = await fetch(`/api/sessions/${sessionId}/status`, {
-//       method: 'PATCH',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify({ status, notes })
-//     });
-//     return await response.json();
-//   }
-// );
+export const updateSessionStatus = createAsyncThunk(
+  "timeTracking/updateApprovalStatus",
+  async ({
+    sessionId,
+    status,
+    userId,
+  }: {
+    sessionId: string;
+    status: "COMPLETED" | "REJECTED";
+    userId: string | number;
+  }) => {
+    const response = await fetch(`/api/time-tracking/sessions`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, status, userId }),
+    });
+    if (!response.ok) throw new Error("Toggle failed");
+    return { id: sessionId, status };
+  },
+);
 
 // ============ SLICE ============
 
@@ -346,6 +351,14 @@ const timeTrackingSlice = createSlice({
       .addCase(fetchUserHistoryRequests.rejected, (state) => {
         state.historyLoading = false;
       })
+      .addCase(updateSessionStatus.fulfilled, (state, action) => {
+        const index = state.sessions.findIndex(
+          (s) => s.id === action.payload.id,
+        );
+        if (index !== -1) {
+          Object.assign(state.sessions[index], action.payload);
+        }
+      });
   },
 });
 
