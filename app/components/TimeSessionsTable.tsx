@@ -20,7 +20,8 @@ type SortOrder = "asc" | "desc";
 
 export default function TimeSessionsTable({ limit }: TimeSessionsTableProps) {
   const user = useAppSelector((state) => state.auth.user);
-  const sessions = useAppSelector((state) => state.timeTracking.sessions);
+   const sessionsState = useAppSelector((state) => state.timeTracking);
+  const sessions = Array.isArray(sessionsState?.sessions) ? sessionsState.sessions : [];
   
   // Filter user's sessions
   const userSessions = sessions.filter(session => session.userId === user?.id);

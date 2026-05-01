@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { useAppSelector } from "../store/selectors/userSelector";
 import { TimeSession } from "../store/slices/timeTrackingSlice";
 
@@ -17,48 +18,52 @@ type ValuePiece = Date | null;
 type Value = ValuePiece | [ValuePiece, ValuePiece];
 
 type AttendanceCalendarProps = {
-  onDateClick?: (date: Date) => void;
-  selectedDate?: Date | null;
   showTodayButton?: boolean;
 };
 
 export default function AttendanceCalendar({
-  onDateClick,
-  selectedDate,
   showTodayButton = true,
 }: AttendanceCalendarProps) {
   const user = useAppSelector((state) => state.auth.user);
-  const sessions = useAppSelector((state) => state.timeTracking.sessions);
-  const [currentDate, setCurrentDate] = useState<Date | null>(
-    selectedDate || new Date(),
+  const sessionsState = useAppSelector((state) => state.timeTracking);
+  const sessions = useMemo(
+    () => Array.isArray(sessionsState?.sessions) ? sessionsState.sessions : [],
+    [sessionsState]
   );
-
-  // const activeMonth = currentDate?.getMonth();
-  // const activeYear = currentDate?.getFullYear();
-  // const today = new Date();
-  // console.log("Today's date:", today);
+  const [currentDate, setCurrentDate] = useState<Date | null>(new Date());
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
 
   const attendanceData = useMemo(() => {
     if (!user?.id)
-      return new Map<string, { totalHours: number; sessions: TimeSession[] }>();
+      return new Map<string, { totalHours: number; sessions: TimeSession[]; status: string }>();
 
     const data = new Map<
       string,
-      { totalHours: number; sessions: TimeSession[] }
+      { totalHours: number; sessions: TimeSession[]; status: string }
     >();
 
-    sessions
-      .filter((session) => session.userId === user.id && session.duration)
-      .forEach((session) => {
-        const dateKey = session.date;
-        const existing = data.get(dateKey) || { totalHours: 0, sessions: [] };
+    const userSessions = sessions.filter((session) => session.userId === user.id);
+    console.log("User:", user?.id, "Total sessions:", sessions.length, "User sessions:", userSessions.length, "Sessions:", userSessions);
 
-        existing.totalHours += session.duration || 0;
-        existing.sessions.push(session);
+    userSessions.forEach((session) => {
+      const dateKey = session.date;
+      const existing = data.get(dateKey) || { totalHours: 0, sessions: [], status: "ABSENT" };
 
-        data.set(dateKey, existing);
-      });
+      existing.totalHours += session.duration || 0;
+      existing.sessions.push(session);
+      
+      // Determine status based on sessions
+      if (session.status === "COMPLETED" || session.status === "APPROVED") {
+        existing.status = "PRESENT";
+      } else if (session.status === "PENDING") {
+        existing.status = "PENDING";
+      }
 
+      data.set(dateKey, existing);
+    });
+
+    console.log("Attendance data map:", data);
     return data;
   }, [user, sessions]);
 
@@ -68,42 +73,49 @@ export default function AttendanceCalendar({
     const dateKey = toLocalDateKey(date);
     const attendance = attendanceData.get(dateKey);
 
-    // Check for pending request
-    const hasPendingRequest = pendingRequests.some(
-      (req) => req.date === dateKey && req.status === "pending",
-    );
-
     return (
-      <div className="mt-auto pt-2 w-full">
-        {hasPendingRequest && (
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full animate-pulse" />
-        )}
-
-        {attendance && attendance.sessions.length > 0 && (
+      <div className="mt-auto pt-2 w-full flex flex-col items-center gap-1">
+        {attendance ? (
           <>
-            <div className="text-xs font-semibold text-white">
-              {Math.floor(attendance.totalHours / (1000 * 60 * 60)) > 0
-                ? `${Math.floor(attendance.totalHours / (1000 * 60 * 60))}h`
-                : ""}
-              {Math.floor(
-                (attendance.totalHours % (1000 * 60 * 60)) / (1000 * 60),
-              ) > 0
-                ? ` ${Math.floor((attendance.totalHours % (1000 * 60 * 60)) / (1000 * 60))}m`
-                : ""}
+            {/* Status Badge */}
+            <div className="text-xs font-bold">
+              {attendance.status === "PRESENT" && (
+                <span className="px-2 py-1 bg-green-500 text-white rounded-full text-[10px]">
+                  Present
+                </span>
+              )}
+              {attendance.status === "PENDING" && (
+                <span className="px-2 py-1 bg-amber-500 text-white rounded-full text-[10px]">
+                  Pending
+                </span>
+              )}
             </div>
-            <div className="text-[10px] text-white font-medium">
-              {attendance.sessions.length}{" "}
-              {attendance.sessions.length === 1 ? "session" : "sessions"}
-            </div>
-          </>
-        )}
 
-        {/* Add a small indicator for past dates without attendance */}
-        {isPastDate(date) &&
-          !attendance?.sessions.length &&
-          !hasPendingRequest && (
+            {/* Hours */}
+            {/* {attendance.totalHours > 0 && (
+              <div className="text-xs font-semibold text-gray-700">
+                {Math.floor(attendance.totalHours / (1000 * 60 * 60)) > 0
+                  ? `${Math.floor(attendance.totalHours / (1000 * 60 * 60))}h`
+                  : ""}
+                {Math.floor(
+                  (attendance.totalHours % (1000 * 60 * 60)) / (1000 * 60),
+                ) > 0
+                  ? ` ${Math.floor((attendance.totalHours % (1000 * 60 * 60)) / (1000 * 60))}m`
+                  : ""}
+              </div>
+            )} */}
+
+            {/* Session Count */}
+              {/* <div className="text-[10px] text-gray-600">
+                {attendance.sessions.length}{" "}
+                {attendance.sessions.length === 1 ? "session" : "sessions"}
+              </div> */}
+          </>
+        ) : (
+          isPastDate(date) && !isToday(date) && (
             <div className="text-[10px] text-gray-400">No records</div>
-          )}
+          )
+        )}
       </div>
     );
   };
@@ -114,72 +126,61 @@ export default function AttendanceCalendar({
     const dateKey = toLocalDateKey(date);
     const attendance = attendanceData.get(dateKey);
     const isTodayDate = isToday(date);
-    const isSelected = selectedDate && dateKey === toLocalDateKey(selectedDate);
-    const isPast = isPastDate(date);
-
-    // Check if it's Saturday (6) or Sunday (0)
-    const dayOfWeek = date.getDay();
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
-    // Check for pending request
-    const hasPendingRequest = pendingRequests.some(
-      (req) => req.date === dateKey && req.status === "pending",
-    );
 
     let classes =
-      "flex flex-col items-center justify-start transition-colors min-h-[80px]";
+      "flex flex-col items-center justify-start transition-colors min-h-[100px] p-1 bg-white";
 
-    // Add cursor pointer only for past dates and today
-    if (isPast || isTodayDate) {
-      classes += " cursor-pointer hover:bg-gray-100";
+    // Check attendance status FIRST (higher priority than "today")
+    if (attendance) {
+      if (attendance.status === "PRESENT") {
+        classes += " border-2 border-green-500";
+      } else if (attendance.status === "PENDING") {
+        classes += " border-2 border-amber-500";
+      } else {
+        classes += " border border-gray-200";
+      }
+    } else if (isTodayDate) {
+      // Only show blue border if it's today AND has no attendance data
+      classes += " border-2 border-blue-500";
     } else {
-      classes += " cursor-not-allowed opacity-50";
-    }
-
-    // Weekend styling - red text for Sat/Sun
-    if (isWeekend) {
-      classes += " weekend-day";
-    }
-
-    if (isSelected) {
-      classes += " bg-blue-200 font-bold";
-    } else if (isTodayDate && !isSelected) {
-      classes += " bg-blue-50";
-    }
-
-    if (attendance && attendance.sessions.length > 0) {
-      classes += " border-2 border-green-500";
-    }
-
-    if (hasPendingRequest) {
-      classes += " relative border-2 border-amber-500";
+      // No records
+      classes += " border border-gray-200";
     }
 
     return classes;
   };
 
-  const handleDateChange = (value: Value) => {
-    if (value instanceof Date) {
-      setCurrentDate(value);
-      onDateClick?.(value);
-    } else if (Array.isArray(value) && value[0]) {
-      setCurrentDate(value[0]);
-      onDateClick?.(value[0]);
+  const handlePrevMonth = () => {
+    let newMonth = selectedMonth - 1;
+    let newYear = selectedYear;
+    if (newMonth < 0) {
+      newMonth = 11;
+      newYear -= 1;
     }
+    setSelectedMonth(newMonth);
+    setSelectedYear(newYear);
+    const newDate = new Date(newYear, newMonth, 1);
+    setCurrentDate(newDate);
   };
 
-  // Add this state for pending requests (you'll need to fetch from your backend)
-  const [pendingRequests, setPendingRequests] = useState<
-    Array<{ date: string; status: string }>
-  >([
-    // Example data - replace with actual API call
-    { date: "2026-01-28", status: "pending" },
-    { date: "2026-01-27", status: "pending" },
-  ]);
+  const handleNextMonth = () => {
+    let newMonth = selectedMonth + 1;
+    let newYear = selectedYear;
+    if (newMonth > 11) {
+      newMonth = 0;
+      newYear += 1;
+    }
+    setSelectedMonth(newMonth);
+    setSelectedYear(newYear);
+    const newDate = new Date(newYear, newMonth, 1);
+    setCurrentDate(newDate);
+  };
 
-  const activeMonth = currentDate?.getMonth();
-  const activeYear = currentDate?.getFullYear();
-  const today = new Date();
+  const handleYearChange = (newYear: number) => {
+    setSelectedYear(newYear);
+    const newDate = new Date(newYear, selectedMonth, 1);
+    setCurrentDate(newDate);
+  };
 
   // Add this function to check if date is in the past
   const isPastDate = (date: Date) => {
@@ -199,61 +200,168 @@ export default function AttendanceCalendar({
     return dateMidnight.getTime() === todayMidnight.getTime();
   };
 
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 10 }, (_, i) => currentYear - 5 + i);
+
   return (
     <div className="w-full h-full min-h-0">
-      {showTodayButton && (
-        <div className="mb-4 flex justify-end">
+      {/* Navigation Controls */}
+      <div className="mb-4 space-y-3">
+        {showTodayButton && (
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => {
+                const today = new Date();
+                setCurrentDate(today);
+                setSelectedYear(today.getFullYear());
+                setSelectedMonth(today.getMonth());
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium cursor-pointer transition-colors"
+            >
+              Go to Today
+            </button>
+          </div>
+        )}
+
+        {/* Month and Year Controls */}
+        <div className="flex items-center justify-between gap-2 px-4 py-3 bg-gray-50 rounded-lg border border-gray-200">
+          {/* Previous Button */}
           <button
-            onClick={() => {
-              const today = new Date();
-              setCurrentDate(today);
-              onDateClick?.(today);
-            }}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium cursor-pointer"
+            onClick={handlePrevMonth}
+            className="p-2 hover:bg-gray-200 rounded-md transition-colors cursor-pointer"
+            title="Previous month"
           >
-            Go to Today
+            <ChevronLeftIcon className="w-5 h-5" />
+          </button>
+
+          {/* Month/Year Display */}
+          <div className="flex items-center gap-3">
+            {/* Month */}
+            <span className="text-lg font-semibold text-gray-700">
+              {months[selectedMonth]}
+            </span>
+
+            {/* Year Selector */}
+            <select
+              value={selectedYear}
+              onChange={(e) => handleYearChange(Number(e.target.value))}
+              className="px-3 py-1 border border-gray-300 rounded-md text-sm font-semibold cursor-pointer hover:bg-gray-100"
+            >
+              {yearOptions.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Next Button */}
+          <button
+            onClick={handleNextMonth}
+            className="p-2 hover:bg-gray-200 rounded-md transition-colors cursor-pointer"
+            title="Next month"
+          >
+            <ChevronRightIcon className="w-5 h-5" />
           </button>
         </div>
-      )}
 
+        {/* Legend */}
+        <div className="flex flex-wrap gap-4 px-4 py-2 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full" />
+            <span>Present</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-amber-500 rounded-full" />
+            <span>Pending</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-gray-300 rounded-full" />
+            <span>No Records</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Calendar */}
       <Calendar
         value={currentDate}
+        activeStartDate={currentDate || new Date()}
         onActiveStartDateChange={({ activeStartDate }) => {
-          if (activeStartDate) setCurrentDate(activeStartDate);
+          if (activeStartDate) {
+            setCurrentDate(activeStartDate);
+            setSelectedYear(activeStartDate.getFullYear());
+            setSelectedMonth(activeStartDate.getMonth());
+          }
         }}
         className="attendance-calendar"
         next2Label={null}
         prev2Label={null}
+        nextLabel={null}
+        prevLabel={null}
         tileContent={tileContent}
         tileClassName={tileClassName}
-        onClickDay={(value: Date) => {
-          // Only allow clicks on past dates and today
-          if (isPastDate(value) || isToday(value)) {
-            setCurrentDate(value);
-            onDateClick?.(value);
-          }
-        }}
-        tileDisabled={({ date, view }) => {
-          if (view !== "month") return false;
-          // Disable future dates
-          return !isPastDate(date) && !isToday(date);
-        }}
       />
+
+      <style jsx>{`
+        .attendance-calendar .react-calendar__tile {
+          background-color: white !important;
+          border: 1px solid #e5e7eb !important;
+          min-height: 100px;
+          padding: 4px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: flex-start;
+        }
+
+        .attendance-calendar .react-calendar__tile:enabled {
+          background-color: white !important;
+        }
+
+        .attendance-calendar .react-calendar__tile:enabled:hover {
+          background-color: white !important;
+        }
+
+        .attendance-calendar .react-calendar__tile:enabled:focus {
+          background-color: white !important;
+        }
+
+        .attendance-calendar .react-calendar__tile--active {
+          background-color: white !important;
+        }
+
+        .attendance-calendar .react-calendar__tile--now {
+          background-color: white !important;
+          border: 2px solid #3b82f6 !important;
+        }
+
+        .attendance-calendar .react-calendar__month-view__weekdays {
+          background-color: #f9fafb;
+          padding: 8px 0;
+        }
+
+        .attendance-calendar .react-calendar__month-view__weekdays__weekday {
+          font-weight: 600;
+          color: #374151;
+          padding: 8px 0;
+          text-decoration: none;
+        }
+      `}</style>
     </div>
   );
 }
-
-// Add this to your global CSS or as a style tag:
-<style jsx global>{`
-  .weekend-day .react-calendar__tile abbr {
-    color: #dc2626 !important; /* red-600 */
-  }
-
-  .react-calendar__tile--now {
-    background-color: #eff6ff !important; /* blue-50 */
-  }
-
-  .react-calendar__tile--active {
-    background-color: #bfdbfe !important; /* blue-200 */
-  }
-`}</style>;

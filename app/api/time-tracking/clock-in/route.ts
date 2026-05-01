@@ -5,7 +5,7 @@ import { db } from "../../../lib/db";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { userId, status, clockIn, clockOut, date:selectedDate } = body;
+    const { userId, status, clockIn, clockOut, date:selectedDate, duration } = body;
 
     console.log("Clock-in request:", { userId });
 
@@ -48,9 +48,9 @@ export async function POST(req: Request) {
       status === "PENDING"
         ? await db.execute({
             sql: `INSERT INTO timesession 
-            (userId, date, clockIn, clockOut, status, createdAt, updatedAt) 
-            VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
-            args: [userId, selectedDate, clockIn, clockOut, status],
+            (userId, date, clockIn, clockOut, duration, status, createdAt, updatedAt) 
+            VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+            args: [userId, selectedDate, clockIn, clockOut, duration, status],
           })
         : await db.execute({
             sql: `INSERT INTO timesession 

@@ -11,7 +11,7 @@ import {
   selectHistoryLoading,
   selectHistoryFilters,
 } from "../../store/selectors/userSelector";
-import { fetchUserHistoryRequests } from "../../store/slices/timeTrackingSlice";
+import { fetchUserHistory } from "../../store/slices/timeTrackingSlice";
 import {
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -117,7 +117,7 @@ export default function HistoryPage() {
     if (!user?.id) return;
 
     dispatch(
-      fetchUserHistoryRequests({
+      fetchUserHistory({
         userId: user.id,
         page: pagination.page,
         limit: pagination.limit,
@@ -129,7 +129,7 @@ export default function HistoryPage() {
     (page: number) => {
       if (user?.id) {
         dispatch(
-          fetchUserHistoryRequests({
+          fetchUserHistory({
             userId: user?.id,
             page,
             limit: pagination.limit,

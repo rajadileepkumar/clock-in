@@ -41,7 +41,8 @@ export default function DateDetailsPanel({
   selectedDate,
 }: DateDetailsPanelProps) {
   const user = useAppSelector((state) => state.auth.user);
-  const sessions = useAppSelector((state) => state.timeTracking.sessions);
+   const sessionsState = useAppSelector((state) => state.timeTracking);
+  const sessions = Array.isArray(sessionsState?.sessions) ? sessionsState.sessions : [];
 
   const daySessions = useMemo(() => {
     if (!selectedDate || !user?.id) return [];

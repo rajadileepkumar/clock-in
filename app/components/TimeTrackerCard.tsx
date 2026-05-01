@@ -7,7 +7,6 @@ import {
   StopIcon,
   ClockIcon,
   ExclamationTriangleIcon,
-  //   PauseIcon,
 } from "@heroicons/react/24/outline";
 import { useAppSelector } from "../store/selectors/userSelector";
 
@@ -20,23 +19,26 @@ export default function TimeTrackerCard({
 }) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const user = useAppSelector((state) => state.auth.user);
-  const sessions = useAppSelector((state) => state.timeTracking.sessions);
+  
+  // Get sessions from Redux with safe fallback
+  const sessionsState = useAppSelector((state) => state.timeTracking);
+  const sessions = Array.isArray(sessionsState?.sessions) ? sessionsState.sessions : [];
 
-  // Find active session
+  // Find active session with safety checks
   const activeSession = sessions.find(
-    (session) => session.userId === user?.id && session.status === "ACTIVE",
+    (session) => session?.userId === user?.id && session?.status === "ACTIVE",
   );
 
-  // Calculate today's total
+  // Calculate today's total with safe filtering
   const todaySessions = sessions.filter(
     (session) =>
-      session.userId === user?.id &&
-      session.date === new Date().toISOString().split("T")[0] &&
-      session.status === "COMPLETED",
+      session?.userId === user?.id &&
+      session?.date === new Date().toISOString().split("T")[0] &&
+      session?.status === "COMPLETED",
   );
 
   const totalToday = todaySessions.reduce(
-    (sum, session) => sum + (session.duration || 0),
+    (sum, session) => sum + (session?.duration || 0),
     0,
   );
 
@@ -62,14 +64,17 @@ export default function TimeTrackerCard({
   };
 
   const hasActiveSessionFromYesterday = useMemo(() => {
+    if (!Array.isArray(sessions)) return false;
+    
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     yesterday.setHours(0, 0, 0, 0);
+    const yesterdayStr = yesterday.toISOString().split("T")[0];
 
     // Check if there are any sessions from yesterday without clockOut
     return sessions.some((session) => {
-      const sessionDate = new Date(session.date);
-      return sessionDate.getTime() === yesterday.getTime() && !session.clockOut;
+      if (!session) return false;
+      return session.date === yesterdayStr && !session.clockOut;
     });
   }, [sessions]);
 
@@ -121,24 +126,13 @@ export default function TimeTrackerCard({
         {/* Right: Action Buttons */}
         <div className="flex gap-3">
           {activeSession ? (
-            <>
-              <button
-                onClick={onClockOut}
-                className="flex items-center gap-2 px-6 py-3 bg-white text-red-600 rounded-lg font-semibold hover:bg-red-50 transition-colors shadow-md cursor-pointer"
-              >
-                <StopIcon className="h-5 w-5" />
-                Clock Out
-              </button>
-              {/*
-              
-              <button
-                className="flex items-center gap-2 px-4 py-3 bg-blue-800 text-white rounded-lg font-semibold hover:bg-blue-900 transition-colors"
-              >
-                <PauseIcon className="h-5 w-5" />
-                Pause
-              </button>
-                */}
-            </>
+            <button
+              onClick={onClockOut}
+              className="flex items-center gap-2 px-6 py-3 bg-white text-red-600 rounded-lg font-semibold hover:bg-red-50 transition-colors shadow-md cursor-pointer"
+            >
+              <StopIcon className="h-5 w-5" />
+              Clock Out
+            </button>
           ) : (
             <button
               onClick={onClockIn}

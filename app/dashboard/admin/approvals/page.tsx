@@ -12,14 +12,14 @@ import { CheckIcon, XMarkIcon, ClockIcon } from "@heroicons/react/24/outline";
 export default function ApprovalsPage() {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
-  const sessions = useAppSelector((state) => state.timeTracking.sessions);
+  const sessions = useAppSelector((state) => state.timeTracking.sessions) || [];
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSession, setSelectedSession] = useState<TimeSession | null>(null);
   const [notes, setNotes] = useState("");
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
 
   // Filter pending sessions
-  const pendingSessions = sessions.filter(session => session.status === "PENDING");
+  const pendingSessions = Array.isArray(sessions) ? sessions.filter(session => session.status === "PENDING") : [];
   // const approvedSessions = sessions.filter(session => session.status === "APPROVED");
   // const rejectedSessions = sessions.filter(session => session.status === "REJECTED");
 

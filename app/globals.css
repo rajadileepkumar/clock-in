@@ -113,7 +113,7 @@ body {
 .react-calendar__tile {
   max-width: 100% !important;
   padding: 12px 8px !important;
-  background: #3d3d3d !important;
+  background: white !important;
   text-align: center !important;
   line-height: 1.2 !important;
   font-size: 0.9em !important;
@@ -147,7 +147,7 @@ body {
 
 .react-calendar__tile:enabled:hover,
 .react-calendar__tile:enabled:focus {
-  background: #3d3d3d !important;
+  background: white !important;
 }
 
 .react-calendar__tile--now {
@@ -160,13 +160,13 @@ body {
 }
 
 .react-calendar__tile--active {
-  background: #4d38e8 !important;
+  background: #fff !important;
   color: white !important;
 }
 
 .react-calendar__tile--active:enabled:hover,
 .react-calendar__tile--active:enabled:focus {
-  background: #1087ff !important;
+  background: #fff !important;
 }
 
 .react-calendar__tile abbr {

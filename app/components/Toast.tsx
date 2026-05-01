@@ -3,19 +3,25 @@
 import React from "react";
 
 export type ToastType = "success" | "error" | "info";
+export type ToastPosition = "right-bottom" | "left-bottom";
 
 export default function Toast({
   type,
   message,
   visible,
+  position = "right-bottom",
 }: {
   type: ToastType;
   message: string;
   visible: boolean;
+  position?: ToastPosition;
 }) {
   if (!visible) return null;
+
+  const positionClasses = position === "left-bottom" ? "fixed left-6 bottom-6 z-50" : "fixed right-6 bottom-6 z-50";
+
   return (
-    <div className="fixed right-6 bottom-6 z-50">
+    <div className={positionClasses}>
       <div
         className={`max-w-sm w-full rounded-md shadow-lg ring-1 ring-black/5 overflow-hidden ${type === "success" ? "bg-white" : "bg-white"}`}
       >
