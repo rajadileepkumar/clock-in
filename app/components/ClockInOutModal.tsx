@@ -7,8 +7,8 @@ import {
   DocumentTextIcon,
   ClockIcon 
 } from "@heroicons/react/24/outline";
-import { useAppDispatch, useAppSelector } from "../store/selectors/userSelector"; // Import useAppSelector
-import { clockIn, clockOut } from "../store/slices/timeTrackingSlice";
+import { useAppDispatch, useAppSelector } from "../store/selectors/userSelector";
+import { clockIn, clockOut, fetchUserSessions } from "../store/slices/timeTrackingSlice";
 
 interface ClockInOutModalProps {
   isOpen: boolean;
@@ -41,7 +41,7 @@ export default function ClockInOutModal({
     
     try {
       const payload = {
-        userId: user.id, // Add userId
+        userId: user.id,
       };
 
       console.log("Submitting clock action:", { action, payload });
@@ -51,6 +51,9 @@ export default function ClockInOutModal({
       } else {
         await dispatch(clockOut(payload)).unwrap();
       }
+
+      // Refresh sessions immediately after successful action
+      await dispatch(fetchUserSessions());
 
       onClose();
       // Reset form

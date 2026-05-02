@@ -2,27 +2,47 @@
 
 import { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../store/selectors/userSelector";
-import { fetchUserSessions } from "../store/slices/timeTrackingSlice";
+import { fetchUserSessions, type TimeSession } from "../store/slices/timeTrackingSlice";
 import TimeTrackerCard from "../components/TimeTrackerCard";
 import AttendanceCalendar from "../components/AttendanceCalendar";
 import TimeSessionsTable from "../components/TimeSessionsTable";
 import ClockInOutModal from "../components/ClockInOutModal";
 import AttendanceRequestModal from "../components/AttendanceRequestModal";
+import ClockOutPastModal from "../components/ClockOutPastModal";
 
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
+  const sessions = useAppSelector((state) => state.timeTracking.sessions) || [];
   
   const [showClockModal, setShowClockModal] = useState(false);
   const [clockAction, setClockAction] = useState<"IN" | "OUT">("IN");
   const [showRequestModal, setShowRequestModal] = useState(false);
+  const [showClockOutPastModal, setShowClockOutPastModal] = useState(false);
   const [preSelectedDate, setPreSelectedDate] = useState<string>("");
+
+  // Find active session from any date (not just today)
+  const activeSessionFromPast: TimeSession | undefined = sessions.find(
+    (session: TimeSession) => session?.userId === user?.id && session?.status === "ACTIVE"
+  );
 
   // Fetch sessions on page load
   useEffect(() => {
     if (user?.id) {
       dispatch(fetchUserSessions());
     }
+  }, [user?.id, dispatch]);
+
+  // Refetch sessions when page becomes visible (user returns to tab)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && user?.id) {
+        dispatch(fetchUserSessions());
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [user?.id, dispatch]);
 
   const handleClockIn = () => {
@@ -33,6 +53,10 @@ export default function DashboardPage() {
   const handleClockOut = () => {
     setClockAction("OUT");
     setShowClockModal(true);
+  };
+
+  const handleClockOutPastDate = () => {
+    setShowClockOutPastModal(true);
   };
 
   const handleRequestAttendance = () => {
@@ -51,6 +75,8 @@ export default function DashboardPage() {
         <TimeTrackerCard
           onClockIn={handleClockIn}
           onClockOut={handleClockOut}
+          onClockOutPastDate={handleClockOutPastDate}
+          activeSession={activeSessionFromPast}
         />
       </div>
 
@@ -151,6 +177,12 @@ export default function DashboardPage() {
         isOpen={showRequestModal}
         onClose={handleCloseRequestModal}
         preSelectedDate={preSelectedDate}
+      />
+
+      <ClockOutPastModal
+        isOpen={showClockOutPastModal}
+        onClose={() => setShowClockOutPastModal(false)}
+        activeSession={activeSessionFromPast}
       />
     </div>
   );

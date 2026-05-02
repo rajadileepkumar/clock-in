@@ -4,7 +4,7 @@ import { db } from "../../../lib/db";
 
 export async function GET() {
   try {
-    let query = `SELECT * FROM timesession WHERE status IN ('PENDING', 'COMPLETED', 'APPROVED')`;
+    let query = `SELECT * FROM timesession WHERE status IN ('PENDING', 'COMPLETED', 'APPROVED', 'ACTIVE')`;
     // Order by date and time
     query += ` ORDER BY date DESC, clockIn DESC`;
 

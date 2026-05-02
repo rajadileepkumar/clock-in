@@ -14,13 +14,12 @@ export async function POST(req: Request) {
     }
 
     const now = new Date().toISOString();
-    const date = new Date().toISOString().split("T")[0];
 
-    // Get active session
+    // Get active session (from any date for forgotten clock outs)
     const activeSession = await db.execute({
       sql: `SELECT * FROM timesession 
-            WHERE userId = ? AND status = 'ACTIVE' AND date = ?`,
-      args: [userId, date],
+            WHERE userId = ? AND status = 'ACTIVE'`,
+      args: [userId],
     });
 
     if (activeSession.rows.length === 0) {
@@ -63,7 +62,7 @@ export async function POST(req: Request) {
     if (sessionData.location) {
       try {
         sessionData.location = JSON.parse(sessionData.location as string);
-      } catch (e) {
+      } catch {
         sessionData.location = null;
       }
     }

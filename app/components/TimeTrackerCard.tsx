@@ -1,7 +1,7 @@
-/* eslint-disable react-hooks/purity */
+/* eslint-disable @next/next/no-html-link-for-pages */
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
   PlayIcon,
   StopIcon,
@@ -9,13 +9,18 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { useAppSelector } from "../store/selectors/userSelector";
+import { type TimeSession } from "../store/slices/timeTrackingSlice";
 
 export default function TimeTrackerCard({
   onClockIn,
   onClockOut,
+  onClockOutPastDate,
+  activeSession: passedActiveSession,
 }: {
   onClockIn: () => void;
   onClockOut: () => void;
+  onClockOutPastDate: () => void;
+  activeSession?: TimeSession;
 }) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const user = useAppSelector((state) => state.auth.user);
@@ -24,8 +29,8 @@ export default function TimeTrackerCard({
   const sessionsState = useAppSelector((state) => state.timeTracking);
   const sessions = Array.isArray(sessionsState?.sessions) ? sessionsState.sessions : [];
 
-  // Find active session with safety checks
-  const activeSession = sessions.find(
+  // Use passed active session or find it
+  const activeSession = passedActiveSession || sessions.find(
     (session) => session?.userId === user?.id && session?.status === "ACTIVE",
   );
 
@@ -63,20 +68,7 @@ export default function TimeTrackerCard({
     });
   };
 
-  const hasActiveSessionFromYesterday = useMemo(() => {
-    if (!Array.isArray(sessions)) return false;
-    
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(0, 0, 0, 0);
-    const yesterdayStr = yesterday.toISOString().split("T")[0];
-
-    // Check if there are any sessions from yesterday without clockOut
-    return sessions.some((session) => {
-      if (!session) return false;
-      return session.date === yesterdayStr && !session.clockOut;
-    });
-  }, [sessions]);
+  const hasActiveSessionFromYesterday = !!activeSession;
 
   return (
     <div className="bg-linear-to-r from-purple-600 to-indigo-700 rounded-xl shadow-lg p-6 text-white mb-6">
@@ -84,9 +76,17 @@ export default function TimeTrackerCard({
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
           <div className="flex items-center gap-2">
             <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
-            <p className="text-sm text-red-700">
-              You forgot to clock out yesterday! Please clock in for today.
-            </p>
+            <div>
+              <p className="text-sm text-red-700 font-semibold">
+                You forgot to clock out on {new Date(activeSession?.date || new Date()).toLocaleDateString()}!
+              </p>
+              <button
+                onClick={onClockOutPastDate}
+                className="text-xs text-red-600 hover:text-red-700 underline mt-1 cursor-pointer"
+              >
+                Click here to clock out for that date
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -145,31 +145,6 @@ export default function TimeTrackerCard({
         </div>
       </div>
 
-      {/* Active Session Timer */}
-      {activeSession && (
-        <div className="mt-6 pt-6 border-t border-blue-500/30">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-sm opacity-90">Current Session</p>
-              <p className="text-lg font-semibold">
-                Started at{" "}
-                {new Date(activeSession.clockIn).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm opacity-90">Elapsed Time</p>
-              <p className="text-2xl font-mono font-bold">
-                {formatDuration(
-                  Date.now() - new Date(activeSession.clockIn).getTime(),
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

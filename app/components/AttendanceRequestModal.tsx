@@ -6,7 +6,7 @@ import {
   useAppDispatch,
   useAppSelector,
 } from "../store/selectors/userSelector";
-import { clockIn } from "../store/slices/timeTrackingSlice";
+import { clockIn, fetchUserSessions } from "../store/slices/timeTrackingSlice";
 import { buildISODateTime } from "../utils/datehelper";
 import Toast from "./Toast";
 
@@ -39,15 +39,17 @@ export default function AttendanceRequestModal({
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
-  // Auto-hide toast after 3 seconds
+  // Auto-hide toast after 3 seconds and fetch fresh data
   useEffect(() => {
     if (showToast) {
       const timer = setTimeout(() => {
         setShowToast(false);
+        // Fetch fresh sessions data after toast closes
+        dispatch(fetchUserSessions());
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [showToast]);
+  }, [showToast, dispatch]);
 
   // Calculate 9 hours duration in milliseconds
   const NINE_HOURS_MS = 9 * 60 * 60 * 1000;
@@ -95,7 +97,6 @@ export default function AttendanceRequestModal({
         }
 
         setToastMessage(`✓ Submitted attendance for ${dates.length} day(s)`);
-        setShowToast(true);
       } else {
         // Single date submission
         const payload = {
@@ -109,14 +110,16 @@ export default function AttendanceRequestModal({
 
         await dispatch(clockIn(payload)).unwrap();
         setToastMessage("✓ Attendance request submitted successfully!");
-        setShowToast(true);
       }
 
-      // Reset form and close after short delay
+      // Close modal first, then show toast
+      resetForm();
+      onClose();
+      
+      // Show toast after modal closes
       setTimeout(() => {
-        resetForm();
-        onClose();
-      }, 1500);
+        setShowToast(true);
+      }, 300);
     } catch (err) {
       console.error("Request submission failed:", err);
       setError(
@@ -141,10 +144,6 @@ export default function AttendanceRequestModal({
   };
 
   if (!isOpen) return null;
-
-  const isPastDate = (date: string) => {
-    return date < today;
-  };
 
   return (
     <>
